@@ -13,16 +13,26 @@
 | `npm test` | юнит-тесты (парсер естественного языка, повторы, .ics) |
 | `npm run icons` | перегенерировать иконки в `public/icons` |
 
-## Деплой на GitHub Pages
+## Ветки и деплой на GitHub Pages
 
-1. Создай пустой репозиторий на https://github.com/new (например, `ritm`).
-2. Первый раз укажи его адрес:
+| Ветка | Что в ней | Как туда попадает |
+| --- | --- | --- |
+| `main` | только исходники (без `dist`, `node_modules` и собранных файлов) | `git push` |
+| `gh-pages` | только готовая сборка | `npm run deploy` (перезаписывается целиком) |
+
+Ветку `gh-pages` никогда не подтягивай в `main` (`git pull origin gh-pages`): иначе собранные файлы окажутся в корне проекта.
+
+Первый раз:
+1. Создай пустой репозиторий на https://github.com/new.
+2. Отправь исходники в `main`:
    ```bash
-   npm run deploy -- https://github.com/<логин>/ritm.git
+   git remote add origin https://github.com/<логин>/<репозиторий>.git
+   git push -u origin main
    ```
-3. Дальше просто `npm run deploy`.
+3. Опубликуй сборку: `npm run deploy`.
+4. На GitHub: Settings → General → Default branch = `main`; Settings → Pages → Branch = `gh-pages` / `(root)`.
 
-Скрипт сам создаст git-репозиторий (если его нет), запомнит `origin`, соберёт проект и принудительно запушит сборку в ветку `gh-pages`. Приложение будет доступно по адресу `https://<логин>.github.io/ritm/`. Если после первого деплоя страница отдаёт 404, включи Pages в настройках репозитория: Settings → Pages → Branch: `gh-pages` / `(root)`.
+Дальше обычный цикл: `git commit` + `git push` для кода, `npm run deploy` для сайта. Приложение доступно по адресу `https://<логин>.github.io/<репозиторий>/`.
 
 Маршрутизация через `#`, а `<base href="./">` относительный, поэтому приложение работает в любом подкаталоге без доп. настроек.
 

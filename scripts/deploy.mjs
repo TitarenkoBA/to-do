@@ -45,6 +45,16 @@ if (!remote) {
   );
 }
 
+// The source must reach `main` first: if gh-pages is the first branch pushed to an empty repo,
+// GitHub makes it the default one, and later clones/pulls bring the build into the project root.
+if (!tryGit(['ls-remote', '--heads', remote, 'main'])) {
+  fail(
+    'На GitHub ещё нет ветки main с исходниками. Сначала отправь код:\n' +
+      '  git add -A && git commit -m "init" && git push -u origin main\n' +
+      '  затем повтори: npm run deploy',
+  );
+}
+
 // 2. build
 if (!process.argv.includes('--no-build')) {
   console.log('• сборка…');
