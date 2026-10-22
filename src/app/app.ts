@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, NavigationStart, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { Data, INBOX, newEntry, newNote } from './core/data.service';
+import { NativeService } from './core/native.service';
 import { Notifier } from './core/notify.service';
 import { Pomodoro } from './core/pomodoro.service';
 import { Pwa } from './core/pwa.service';
@@ -37,6 +38,7 @@ export class App {
   protected settings = inject(SettingsService);
   protected pwa = inject(Pwa);
   protected notifier = inject(Notifier);
+  protected native = inject(NativeService);
   private actions = inject(TaskActions);
   private router = inject(Router);
   private quick = viewChild<QuickAdd>('quick');
@@ -83,6 +85,7 @@ export class App {
   constructor() {
     this.pwa.init();
     this.sched.start();
+    this.native.init();
     this.router.events.pipe(filter((e) => e instanceof NavigationStart)).subscribe(() => {
       this.ui.taskId.set(null);
       this.ui.quickAdd.set(null);

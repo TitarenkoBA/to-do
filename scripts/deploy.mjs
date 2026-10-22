@@ -3,7 +3,7 @@
 //   npm run deploy -- https://github.com/you/ritm.git — first time: sets `origin`, then deploys
 // Builds the app and force-pushes dist/ to the `gh-pages` branch.
 import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const DIST = join(root, 'dist', 'to-do', 'browser');
 const BRANCH = 'gh-pages';
+const APK = join(root, 'apk');
 
 const git = (args, cwd = root, quiet = false) =>
   execFileSync('git', args, { cwd, encoding: 'utf8', stdio: quiet ? ['ignore', 'pipe', 'ignore'] : ['ignore', 'pipe', 'inherit'] }).trim();
@@ -66,6 +67,15 @@ if (!existsSync(join(DIST, 'index.html'))) fail('Сборка не найден�
 const tmp = mkdtempSync(join(tmpdir(), 'ritm-deploy-'));
 try {
   cpSync(DIST, tmp, { recursive: true });
+  // Android APK (built by `npm run apk`) is published next to the site: <site>/ritm.apk + version.json
+  if (existsSync(join(APK, 'ritm.apk'))) {
+    cpSync(join(APK, 'ritm.apk'), join(tmp, 'ritm.apk'));
+    cpSync(join(APK, 'version.json'), join(tmp, 'version.json'));
+    const v = JSON.parse(readFileSync(join(APK, 'version.json'), 'utf8'));
+    console.log(`• + ritm.apk ${v.versionName} (${(v.size / 1048576).toFixed(1)} МБ)`);
+  } else {
+    console.log('• APK не найден (npm run apk) — публикую только сайт');
+  }
   const name = tryGit(['config', 'user.name']) || 'Ritm Deploy';
   const email = tryGit(['config', 'user.email']) || 'deploy@ritm.local';
   git(['init', '-b', BRANCH], tmp, true);

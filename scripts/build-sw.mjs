@@ -14,7 +14,7 @@ function walk(dir) {
   });
 }
 
-const skip = new Set(['sw.js', '404.html', '.nojekyll', '3rdpartylicenses.txt', 'favicon.ico']);
+const skip = new Set(['sw.js', '404.html', '.nojekyll', '3rdpartylicenses.txt', 'favicon.ico', 'ritm.apk', 'version.json']);
 const files = walk(DIST)
   .map((p) => relative(DIST, p).split(sep).join('/'))
   .filter((f) => !skip.has(f) && !f.endsWith('.map'))

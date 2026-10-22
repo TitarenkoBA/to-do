@@ -157,7 +157,8 @@ export class Pomodoro {
         if (st.vibrate) vibrate([300, 150, 300]);
       }
       const msg = s.mode === 'focus' ? 'Отличная работа! Время отдохнуть ☕' : 'Перерыв окончен — снова в бой 🍅';
-      this.notifier.show(s.mode === 'focus' ? '🍅 Фокус завершён' : '☕ Перерыв окончен', msg, { tag: 'pomodoro', url: '#/focus' });
+      // in the Android app the notification scheduled in start() fires by itself
+      if (!this.notifier.native) this.notifier.show(s.mode === 'focus' ? '🍅 Фокус завершён' : '☕ Перерыв окончен', msg, { tag: 'pomodoro', url: '#/focus' });
       this.ui.toast(msg);
     }
     this.state.set({ ...s, mode: next, cycle, running: false, endsAt: null, left: null, startedAt: null });

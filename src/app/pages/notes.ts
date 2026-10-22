@@ -120,7 +120,7 @@ export class Notes {
   template: `
     @if (note(); as n) {
       <div class="page !pt-0 min-h-full" [style.background]="tint(n.color, 10)">
-        <div class="sticky top-0 z-10 -mx-4 mb-2 flex items-center gap-1 bg-bg/80 px-2 py-2 pt-[max(env(safe-area-inset-top),8px)] backdrop-blur md:-mx-8 md:px-6"
+        <div class="sticky top-0 z-10 -mx-4 mb-2 flex items-center gap-1 bg-bg/80 px-2 py-2 pt-[max(var(--sa-top),8px)] backdrop-blur md:-mx-8 md:px-6"
           [style.background]="tint(n.color, 10)">
           <button class="btn-icon" (click)="back()" aria-label="Назад"><app-icon name="chevron-left" /></button>
           <span class="flex-1 truncate text-sm text-muted">{{ saved() }}</span>

@@ -26,7 +26,7 @@ import { Empty, PageHeader } from '../shared/ui';
         <div class="text-6xl font-extrabold tracking-tight tabular-nums">{{ clock() }}<span class="text-2xl text-muted">{{ secs() }}</span></div>
         <div class="text-sm text-muted first-letter:uppercase">{{ date() }}</div>
         @if (sched.nextAlarm(); as n) {
-          <div class="mt-2 rounded-full bg-accent/12 px-3 py-1 text-sm font-semibold text-accent">⏰ {{ n.alarm.time }} · через {{ until(n.ts) }}</div>
+          <div class="mt-2 rounded-full bg-accent/12 px-3 py-1 text-sm font-semibold text-accent">⏰ {{ n.time }} · через {{ until(n.ts) }}</div>
         }
         <button class="btn btn-soft mt-4" (click)="bedside()"><app-icon name="bed" [size]="18" />Ночной режим</button>
       </section>
@@ -36,11 +36,15 @@ import { Empty, PageHeader } from '../shared/ui';
         @for (m of quick; track m) { <button class="chip" (click)="timer(m)">{{ m < 60 ? m + ' мин' : m / 60 + ' ч' }}</button> }
       </div>
 
-      @if (!pwa.standalone() || notifier.permission() !== 'granted') {
+      @if (notifier.native ? notifier.permission() !== 'granted' : !pwa.standalone() || notifier.permission() !== 'granted') {
         <div class="mb-4 flex gap-3 rounded-2xl border border-warn/30 bg-warn/8 p-3.5 text-sm">
           <span class="text-xl">💡</span>
           <div class="space-y-1">
-            <p>Будильник звонит, пока Ритм открыт (можно в фоне). Для надёжного подъёма включи <b>Ночной режим</b> — экран не погаснет.</p>
+            @if (notifier.native) {
+              <p>Разреши уведомления — без них будильник не сможет зазвонить, когда приложение закрыто.</p>
+            } @else {
+              <p>Будильник звонит, пока Ритм открыт (можно в фоне). Для надёжного подъёма включи <b>Ночной режим</b> — экран не погаснет.</p>
+            }
             @if (notifier.permission() !== 'granted') {
               <button class="font-semibold text-accent" (click)="notifier.request()">Разрешить уведомления →</button>
             }
@@ -108,18 +112,18 @@ import { Empty, PageHeader } from '../shared/ui';
 
     @if (night()) {
       <div class="fixed inset-0 z-[70] flex flex-col items-center justify-center bg-black text-white select-none anim-fade" (click)="dim.set(!dim())">
-        <button class="absolute top-[max(env(safe-area-inset-top),16px)] right-4 grid size-11 place-items-center rounded-full bg-white/10" (click)="exitNight($event)" aria-label="Выйти">
+        <button class="absolute top-[max(var(--sa-top),16px)] right-4 grid size-11 place-items-center rounded-full bg-white/10" (click)="exitNight($event)" aria-label="Выйти">
           <app-icon name="x" /></button>
         <div class="transition-opacity duration-700" [class.opacity-30]="dim()">
           <div class="text-center text-[26vw] leading-none font-extralight tracking-tight tabular-nums md:text-[16vw]" style="color: color-mix(in srgb, var(--accent) 55%, #fff)">{{ clock() }}</div>
           <div class="mt-4 text-center text-lg text-white/50 first-letter:uppercase">{{ date() }}</div>
           @if (sched.nextAlarm(); as n) {
-            <div class="mt-6 text-center text-white/70">⏰ {{ n.alarm.time }} · через {{ until(n.ts) }}</div>
+            <div class="mt-6 text-center text-white/70">⏰ {{ n.time }} · через {{ until(n.ts) }}</div>
           } @else {
             <div class="mt-6 text-center text-white/40">Будильник не заведён</div>
           }
         </div>
-        <div class="absolute bottom-[max(env(safe-area-inset-bottom),24px)] text-xs text-white/30">
+        <div class="absolute bottom-[max(var(--sa-bottom),24px)] text-xs text-white/30">
           {{ pwa.awake() ? 'Экран не погаснет · ' : '' }}коснись, чтобы приглушить
         </div>
       </div>

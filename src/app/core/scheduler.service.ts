@@ -1,8 +1,10 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { Data, habitActive, habitDone } from './data.service';
 import { Alarm, Task } from './models';
 import { Notifier } from './notify.service';
+import { isNative, nid } from './platform';
 import { SettingsService } from './settings.service';
 import { SoundService } from './sound.service';
 import { Ui } from './ui.service';
@@ -50,10 +52,10 @@ export class Scheduler {
 
   readonly nextAlarm = computed(() => {
     const now = this.now();
-    let best: { alarm: Alarm; ts: number } | null = null;
+    let best: { alarm: Alarm; ts: number; time: string } | null = null;
     for (const a of this.data.alarms.items()) {
       const ts = alarmNext(a, now);
-      if (ts && ts > now && (!best || ts < best.ts)) best = { alarm: a, ts };
+      if (ts && ts > now && (!best || ts < best.ts)) best = { alarm: a, ts, time: timeStr(new Date(ts)) };
     }
     return best;
   });
@@ -72,12 +74,14 @@ export class Scheduler {
     const now = Date.now();
     const today = todayKey();
     const hm = timeStr();
+    // In the Android app the system already shows the notification; in-app we only add a toast/ring when visible.
+    const visible = document.visibilityState === 'visible';
 
     for (const t of this.data.tasks.items()) {
       if (t.done || !t.remindAt || t.remindAt > now) continue;
       if (t.remindedAt && t.remindedAt >= t.remindAt) continue;
       this.data.tasks.patch(t.id, { remindedAt: now });
-      if (now - t.remindAt < 6 * 3600000) this.fireTask(t);
+      if (isNative ? visible && now - t.remindAt < 60000 : now - t.remindAt < 6 * 3600000) this.fireTask(t);
     }
 
     let fired: Record<string, string> = {};
@@ -90,8 +94,8 @@ export class Scheduler {
       if (hm < h.remindTime || !habitActive(h, today) || habitDone(h, today)) continue;
       fired[h.id] = today;
       dirty = true;
-      this.notifier.show(`${h.emoji} ${h.name}`, 'Пора выполнить привычку', { tag: 'habit-' + h.id, url: '#/habits' });
-      this.ui.toast(`${h.emoji} Пора: ${h.name}`, { action: 'Открыть', fn: () => this.router.navigateByUrl('/habits') });
+      if (!isNative) this.notifier.show(`${h.emoji} ${h.name}`, 'Пора выполнить привычку', { tag: 'habit-' + h.id, url: '#/habits' });
+      if (!isNative || (visible && now - at(today, h.remindTime) < 120000)) this.ui.toast(`${h.emoji} Пора: ${h.name}`, { action: 'Открыть', fn: () => this.router.navigateByUrl('/habits') });
     }
     if (dirty) localStorage.setItem(HABIT_FIRED, JSON.stringify(fired));
 
@@ -101,9 +105,12 @@ export class Scheduler {
       if (a.snoozeUntil) {
         if (now >= a.snoozeUntil) {
           this.data.alarms.patch(a.id, { snoozeUntil: undefined });
-          this.ring(a);
-          return;
+          if (!isNative || (visible && now - a.snoozeUntil < 60000)) return this.ring(a, `a:${a.id}:snz`);
         }
+        continue;
+      }
+      if (!a.days.length && a.onDate && at(a.onDate, a.time) < now - 15 * 60000) {
+        this.data.alarms.patch(a.id, { enabled: false });
         continue;
       }
       const ok = a.days.length ? a.days.includes(new Date().getDay()) : a.onDate === today;
@@ -111,24 +118,30 @@ export class Scheduler {
       const key = `${today} ${a.time}`;
       if (ok && now >= ts && now - ts < 15 * 60000 && a.lastFired !== key) {
         this.data.alarms.patch(a.id, { lastFired: key, enabled: a.days.length ? true : false });
-        this.ring(a);
-        return;
+        if (!isNative || (visible && now - ts < 60000)) return this.ring(a, `a:${a.id}:${today}`);
       }
     }
   }
 
   private fireTask(t: Task) {
     const when = t.time ? `в ${t.time}` : 'сегодня';
-    this.notifier.show(`🔔 ${t.title}`, `Напоминание: ${when}`, { tag: 'task-' + t.id, url: '#/tasks' });
-    this.sound.play(this.settings.s().reminderSound, 0.7);
+    if (!isNative) {
+      this.notifier.show(`🔔 ${t.title}`, `Напоминание: ${when}`, { tag: 'task-' + t.id, url: '#/tasks' });
+      this.sound.play(this.settings.s().reminderSound, 0.7);
+    }
     if (this.settings.s().vibrate) vibrate([120, 80, 120]);
     this.ui.toast(`🔔 ${t.title}`, { action: 'Открыть', fn: () => this.ui.openTask(t.id), ms: 10000 });
   }
 
-  ring(a: Alarm) {
+  /** @param nativeKey the system notification that fired for this alarm (Android) — dismissed so only the in-app ring sounds */
+  ring(a: Alarm, nativeKey?: string) {
     this.ringing.set({ alarm: a, title: a.time, body: a.label || 'Будильник' });
     this.sound.ring(a.sound);
-    this.notifier.show(`⏰ ${a.label || 'Будильник'}`, a.time, { tag: 'alarm-' + a.id, url: '#/alarms', sticky: true });
+    if (isNative) {
+      if (nativeKey) setTimeout(() => LocalNotifications.cancel({ notifications: [{ id: nid(nativeKey) }] }).catch(() => {}), 1500);
+    } else {
+      this.notifier.show(`⏰ ${a.label || 'Будильник'}`, a.time, { tag: 'alarm-' + a.id, url: '#/alarms', sticky: true });
+    }
     if (this.settings.s().vibrate) {
       vibrate([600, 300, 600]);
       this.vibTimer = setInterval(() => vibrate([600, 300, 600]), 2000);

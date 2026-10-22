@@ -173,7 +173,7 @@ export class Journal {
   template: `
     @if (entry(); as e) {
       <div class="page !pt-0">
-        <div class="sticky top-0 z-10 -mx-4 mb-3 flex items-center gap-1 bg-bg/85 px-2 py-2 pt-[max(env(safe-area-inset-top),8px)] backdrop-blur md:-mx-8 md:px-6">
+        <div class="sticky top-0 z-10 -mx-4 mb-3 flex items-center gap-1 bg-bg/85 px-2 py-2 pt-[max(var(--sa-top),8px)] backdrop-blur md:-mx-8 md:px-6">
           <button class="btn-icon" (click)="back()" aria-label="Назад"><app-icon name="chevron-left" /></button>
           <label class="relative flex-1 truncate font-semibold first-letter:uppercase">
             {{ long(e.date) }}
