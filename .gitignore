@@ -29,7 +29,7 @@ yarn-error.log
 .history/*
 
 # Miscellaneous
-/.angular/cache
+/.angular
 .sass-cache/
 /connect.lock
 /coverage
@@ -41,3 +41,15 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Build output must never land in the project root (it lives only in the gh-pages branch)
+/chunk-*.js
+/main-*.js
+/polyfills-*.js
+/styles-*.css
+/sw.js
+/404.html
+/.nojekyll
+/index.html
+/manifest.webmanifest
+/icons/
