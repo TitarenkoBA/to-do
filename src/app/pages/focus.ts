@@ -105,7 +105,7 @@ import { PageHeader } from '../shared/ui';
 
     @if (zenOn()) {
       <div class="fixed inset-0 z-[70] flex flex-col items-center justify-center gap-8 bg-bg anim-fade" (dblclick)="exitZen()">
-        <button class="btn-icon absolute top-[max(env(safe-area-inset-top),16px)] right-4" (click)="exitZen()" aria-label="Выйти"><app-icon name="x" /></button>
+        <button class="btn-icon absolute top-[max(var(--sa-top),16px)] right-4" (click)="exitZen()" aria-label="Выйти"><app-icon name="x" /></button>
         <div class="text-sm font-semibold tracking-[.3em] text-muted uppercase">{{ label[p.state().mode] }}</div>
         <div class="text-[22vw] leading-none font-extrabold tabular-nums md:text-[14vw]">{{ p.label() }}</div>
         @if (p.task(); as t) { <div class="max-w-md px-6 text-center text-lg text-muted">{{ t.title }}</div> }

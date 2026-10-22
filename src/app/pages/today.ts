@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 import { Data, habitActive, habitDone, habitStreak } from '../core/data.service';
 import { Habit, Mood } from '../core/models';
+import { NativeService } from '../core/native.service';
 import { Pomodoro } from '../core/pomodoro.service';
 import { Scheduler } from '../core/scheduler.service';
 import { SettingsService } from '../core/settings.service';
@@ -27,6 +28,18 @@ import { Empty, MOODS } from '../shared/ui';
           <span class="text-sm font-bold">{{ doneCount() }}/{{ total() }}</span>
         </app-ring>
       </header>
+
+      @if (native.androidBrowser && native.apk() && !apkHidden()) {
+        <div class="card mb-4 flex items-center gap-3 border-accent/30 bg-accent/8 anim-fade">
+          <span class="text-3xl">📱</span>
+          <div class="min-w-0 flex-1">
+            <div class="font-semibold">Ритм для Android</div>
+            <div class="text-xs text-muted">Будильники при закрытом приложении</div>
+          </div>
+          <a class="btn btn-primary !px-3 !py-2" [href]="native.apkUrl" download>Скачать</a>
+          <button class="btn-icon !size-8 text-muted" (click)="hideApk()" aria-label="Скрыть"><app-icon name="x" [size]="16" /></button>
+        </div>
+      }
 
       <app-quick-add [due]="data.today()" />
 
@@ -106,7 +119,7 @@ import { Empty, MOODS } from '../shared/ui';
             <a routerLink="/alarms" class="card flex flex-col gap-2 transition active:scale-[.98]">
               <div class="flex items-center gap-2 text-sm font-semibold"><app-icon name="alarm" [size]="18" class="text-accent" />Будильник</div>
               @if (sched.nextAlarm(); as n) {
-                <div class="text-2xl font-bold tabular-nums">{{ n.alarm.time }}</div>
+                <div class="text-2xl font-bold tabular-nums">{{ n.time }}</div>
                 <div class="text-xs text-muted">через {{ until(n.ts) }}</div>
               } @else {
                 <div class="text-2xl font-bold text-muted">—</div>
@@ -150,6 +163,13 @@ export class Today {
   private router = inject(Router);
   protected readonly moods = MOODS;
   protected readonly showDone = signal(false);
+  protected native = inject(NativeService);
+  protected readonly apkHidden = signal(localStorage.getItem('ritm.apkHidden') === '1');
+
+  hideApk() {
+    this.apkHidden.set(true);
+    localStorage.setItem('ritm.apkHidden', '1');
+  }
 
   protected readonly date = computed(() => longDate(this.data.today()));
   protected readonly hello = computed(() => {

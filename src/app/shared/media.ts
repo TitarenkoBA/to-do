@@ -324,7 +324,7 @@ export class Attachments {
     @if (ui.viewer(); as v) {
       <div class="fixed inset-0 z-[80] flex flex-col bg-black/95 text-white anim-fade" (pointerdown)="sx = $event.clientX"
         (pointerup)="swipe($event)">
-        <div class="flex items-center gap-2 p-3 pt-[max(env(safe-area-inset-top),12px)]">
+        <div class="flex items-center gap-2 p-3 pt-[max(var(--sa-top),12px)]">
           <span class="flex-1 text-sm text-white/70">{{ v.index + 1 }} / {{ v.items.length }}</span>
           <button class="btn-icon text-white" (click)="save()" aria-label="Сохранить"><app-icon name="download" /></button>
           <button class="btn-icon text-white" (click)="close()" aria-label="Закрыть"><app-icon name="x" /></button>
@@ -344,7 +344,7 @@ export class Attachments {
               <app-icon name="chevron-right" /></button>
           }
         </div>
-        <div class="h-[env(safe-area-inset-bottom)]"></div>
+        <div class="h-[var(--sa-bottom)]"></div>
       </div>
     }
   `,

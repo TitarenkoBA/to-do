@@ -1,4 +1,5 @@
 import { Injectable, inject, isDevMode, signal } from '@angular/core';
+import { isNative } from './platform';
 import { Ui } from './ui.service';
 
 interface InstallEvent extends Event {
@@ -38,7 +39,7 @@ export class Pwa {
     });
     navigator.storage?.persisted?.().then((p) => this.persisted.set(p));
 
-    if ('serviceWorker' in navigator && !isDevMode()) {
+    if ('serviceWorker' in navigator && !isDevMode() && !isNative) {
       navigator.serviceWorker
         .register('sw.js')
         .then((reg) => {

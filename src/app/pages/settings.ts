@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Data } from '../core/data.service';
 import { IoService } from '../core/io.service';
+import { NativeService } from '../core/native.service';
 import { Notifier } from '../core/notify.service';
 import { Pwa } from '../core/pwa.service';
 import { SettingsService } from '../core/settings.service';
@@ -67,7 +68,7 @@ import { PageHeader } from '../shared/ui';
               @for (o of remindOpts; track o[1]) { <option [value]="o[0] ?? ''" [selected]="s().defaultRemind === o[0]">{{ o[1] }}</option> }
             </select>
           </label>
-          <div class="flex flex-wrap gap-2">
+          <div class="flex flex-wrap gap-2" [class.hidden]="native.native">
             @for (x of sounds; track x.id) {
               <button class="chip" [class.chip-on]="s().reminderSound === x.id" (click)="settings.set('reminderSound', x.id); sound.play(x.id)">
                 <app-icon name="volume" [size]="14" />{{ x.name }}</button>
@@ -75,28 +76,61 @@ import { PageHeader } from '../shared/ui';
           </div>
           <label class="flex items-center gap-3"><span class="flex-1">Вибрация</span>
             <input type="checkbox" class="switch" [checked]="s().vibrate" (change)="settings.set('vibrate', $any($event.target).checked)" /></label>
-          @if (notifier.triggers) {
+          @if (native.native) {
+            <p class="text-sm text-ok">✓ Напоминания ставятся в систему Android и придут даже при закрытом приложении.</p>
+          } @else if (notifier.triggers) {
             <p class="text-sm text-ok">✓ Браузер поддерживает отложенные уведомления — напоминания придут даже при закрытом приложении.</p>
           } @else {
             <p class="text-sm text-muted">Напоминания срабатывают, пока Ритм открыт или свёрнут. Для системных напоминаний экспортируй задачи в календарь (.ics).</p>
           }
         </section>
 
+        @if (native.native) {
+          <section class="card space-y-4">
+            <h2 class="label">Android</h2>
+            <div class="flex items-center gap-3">
+              <span class="text-xl">🤖</span>
+              <span class="flex-1">Версия <b>{{ native.installed()?.version ?? '…' }}</b></span>
+              @if (native.updateAvailable()) {
+                <button class="btn btn-primary !py-2" (click)="native.download()">Обновить до {{ native.apk()!.versionName }}</button>
+              }
+            </div>
+            <div class="flex items-center gap-3">
+              <app-icon name="alarm" class="text-accent" />
+              <span class="flex-1">Точные будильники: <b>{{ native.exact() === false ? 'выключены' : 'включены' }}</b></span>
+              @if (native.exact() === false) { <button class="btn btn-soft !py-2" (click)="native.requestExact()">Разрешить</button> }
+            </div>
+            <p class="text-sm text-muted">
+              Напоминания и будильники приходят даже при закрытом приложении. Если на Xiaomi, Huawei, Samsung или OPPO они опаздывают —
+              открой «Настройки телефона → Приложения → Ритм → Батарея» и выбери «Без ограничений».
+            </p>
+          </section>
+        } @else if (native.apk(); as a) {
+          <section class="card space-y-3">
+            <h2 class="label">Android-приложение</h2>
+            <p class="text-sm text-muted">В приложении напоминания и будильники срабатывают, даже когда оно закрыто.</p>
+            <a class="row-btn" [href]="native.apkUrl" download><app-icon name="download" />Скачать APK
+              <span class="ml-auto text-xs text-muted">{{ a.versionName }} · {{ native.apkSize() }}</span></a>
+          </section>
+        }
+
         <section class="card space-y-4">
           <h2 class="label">Приложение</h2>
-          <div class="flex items-center gap-3">
-            <app-icon name="phone" class="text-accent" />
-            <span class="flex-1">{{ pwa.standalone() ? 'Установлено на устройство' : 'Работает в браузере' }}</span>
-            @if (pwa.canInstall()) { <button class="btn btn-primary !py-2" (click)="pwa.install()">Установить</button> }
-          </div>
-          @if (!pwa.standalone() && pwa.isIos) {
+          @if (!native.native) {
+            <div class="flex items-center gap-3">
+              <app-icon name="phone" class="text-accent" />
+              <span class="flex-1">{{ pwa.standalone() ? 'Установлено на устройство' : 'Работает в браузере' }}</span>
+              @if (pwa.canInstall()) { <button class="btn btn-primary !py-2" (click)="pwa.install()">Установить</button> }
+            </div>
+          }
+          @if (!native.native && !pwa.standalone() && pwa.isIos) {
             <p class="text-sm text-muted">На iPhone: нажми «Поделиться» → «На экран Домой».</p>
           }
           <div class="flex items-center gap-3">
             <app-icon [name]="pwa.online() ? 'check' : 'wifi_off'" class="text-ok" />
             <span class="flex-1">Работает офлайн — все данные хранятся только на этом устройстве</span>
           </div>
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3" [class.hidden]="native.native">
             <app-icon name="shield" class="text-accent" />
             <span class="flex-1">Защита от очистки браузером: <b>{{ pwa.persisted() ? 'включена' : 'выключена' }}</b></span>
             @if (!pwa.persisted()) { <button class="btn btn-soft !py-2" (click)="persist()">Включить</button> }
@@ -131,6 +165,7 @@ export class SettingsPage {
   protected notifier = inject(Notifier);
   protected pwa = inject(Pwa);
   protected sound = inject(SoundService);
+  protected native = inject(NativeService);
   private io = inject(IoService);
   private data = inject(Data);
   private ui = inject(Ui);

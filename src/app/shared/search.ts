@@ -24,7 +24,7 @@ interface Hit {
       <div class="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm anim-fade" (click)="close()"></div>
       <div class="fixed inset-x-0 top-0 z-[61] mx-auto flex max-h-[85dvh] max-w-xl flex-col overflow-hidden bg-surface shadow-2xl anim-drop md:top-[12vh] md:rounded-3xl md:border md:border-line"
         (keydown)="key($event)">
-        <div class="flex items-center gap-3 border-b border-line px-4 py-3 pt-[max(env(safe-area-inset-top),12px)] md:pt-3">
+        <div class="flex items-center gap-3 border-b border-line px-4 py-3 pt-[max(var(--sa-top),12px)] md:pt-3">
           <app-icon name="search" class="text-muted" />
           <input #inp class="min-w-0 flex-1 bg-transparent py-1.5 text-lg outline-none placeholder:text-muted" placeholder="Поиск и команды…"
             [value]="q()" (input)="q.set(inp.value); sel.set(0)" />

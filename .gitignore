@@ -53,3 +53,9 @@ Thumbs.db
 /index.html
 /manifest.webmanifest
 /icons/
+
+# Android: built APK is published only to gh-pages; the signing key must never be committed
+/apk/
+/android/keystore.properties
+/android/*.keystore
+*.jks

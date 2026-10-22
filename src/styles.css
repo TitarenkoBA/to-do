@@ -30,6 +30,11 @@
   --ok: #10b981;
   --toast: #1e1c2a;
   --nav-h: 64px;
+  /* Capacitor (Android 15+ edge-to-edge) injects --safe-area-inset-*; browsers use env() */
+  --sa-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --sa-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --sa-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  --sa-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
 }
 
 .dark {
@@ -95,12 +100,12 @@
     display: none;
   }
   .main-area {
-    padding-bottom: calc(var(--nav-h) + 28px + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--nav-h) + 28px + var(--sa-bottom));
   }
   .page {
     max-width: 1120px;
     margin: 0 auto;
-    padding: max(env(safe-area-inset-top), 12px) 16px 16px;
+    padding: max(var(--sa-top), 12px) 16px 16px;
   }
   .page-header {
     display: flex;
@@ -115,8 +120,8 @@
     z-index: 40;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    height: calc(var(--nav-h) + env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(var(--nav-h) + var(--sa-bottom));
+    padding-bottom: var(--sa-bottom);
     background: color-mix(in srgb, var(--surface) 82%, transparent);
     backdrop-filter: blur(18px) saturate(1.6);
     -webkit-backdrop-filter: blur(18px) saturate(1.6);
@@ -145,7 +150,7 @@
   .fab {
     position: fixed;
     right: 16px;
-    bottom: calc(var(--nav-h) + 14px + env(safe-area-inset-bottom));
+    bottom: calc(var(--nav-h) + 14px + var(--sa-bottom));
     z-index: 41;
     display: grid;
     place-items: center;
@@ -164,7 +169,7 @@
   .pomo-pill {
     position: fixed;
     left: 16px;
-    bottom: calc(var(--nav-h) + 24px + env(safe-area-inset-bottom));
+    bottom: calc(var(--nav-h) + 24px + var(--sa-bottom));
     z-index: 41;
     display: flex;
     align-items: center;
@@ -508,7 +513,7 @@
     display: flex;
     flex-direction: column;
     max-height: 92dvh;
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: var(--sa-bottom);
     background: var(--surface);
     border-radius: 28px 28px 0 0;
     box-shadow: 0 -10px 40px rgb(0 0 0 / 0.18);
@@ -540,7 +545,7 @@
   .toasts {
     position: fixed;
     left: 50%;
-    bottom: calc(var(--nav-h) + 88px + env(safe-area-inset-bottom));
+    bottom: calc(var(--nav-h) + 88px + var(--sa-bottom));
     z-index: 97;
     display: flex;
     flex-direction: column;
